@@ -1,0 +1,42 @@
+version: "3"
+services:
+  app:
+    build: app/
+    # command: python ./tester.py
+    volumes:
+     - ./app:/usr/src/app
+    depends_on:
+      - chrome
+    #command: sh -c "dockerize -wait tcp://chrome:4444 -timeout 300s -wait-retry-interval 5s" && bash scripts/run.sh
+    command: "app"
+    hostname: app.localhost
+    environment:
+      - WAIT_HOSTS=chrome.localhost:4444
+      - WAIT_HOSTS_TIMEOUT=300
+      - WAIT_SLEEP_INTERVAL=5
+      - WAIT_HOST_CONNECT_TIMEOUT=30
+  chrome:
+    image: selenium/standalone-chrome
+    shm_size: 2gb
+    hostname: chrome.localhost
+    ports:
+     - "4444:4444" 
+#    healthcheck:
+#      test: curl --fail http://127.0.0.1 || exit 1
+#      interval: 10s
+#      retries: 5
+#      start_period: 5s
+#      timeout: 10s
+    environment:
+      - SE_NODE_SESSION_TIMEOUT=999999
+      - SE_VNC_NO_PASSWORD=1
+      - SE_NODE_OVERRIDE_MAX_SESSIONS=true
+      - SE_NODE_MAX_SESSIONS=5
+#  mongo:
+#    image: mongo:4.4.0
+#    restart: always
+#    volumes:
+#    - mongodata:/data/db
+
+#  redis:
+#    image: redis

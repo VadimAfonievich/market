@@ -1,0 +1,2 @@
+libpq-dev       # sudo dnf install libpq-devel
+curl-config       # sudo apt -y install libcurl4-openssl-dev

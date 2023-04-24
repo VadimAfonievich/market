@@ -1,0 +1,28 @@
+flask_security
+flask_bootstrap
+grab                 #failed
+xlsxwriter
+celerybeat-mongo
+mongoengine
+pymongo==3.5.1
+flask_mongoengine
+monthdelta
+wtforms
+gevent                #failed
+flask_paginate
+flask
+requests
+gunicorn
+fastapi
+uvicorn[standard]                #failed
+celery[redis]
+Redis
+python-rucaptcha                #failed (version?)
+2captcha-python
+anticaptchaofficial
+pyquery                #failed (version?)
+psycopg2
+termcolor
+selenium-wire                #failed (version?)
+chromedriver-py
+bs4

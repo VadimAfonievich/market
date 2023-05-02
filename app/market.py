@@ -1,6 +1,7 @@
 from market_class import Market
 from tqdm import tqdm
 from categories import categories
+from categories import proxy
 import json
 import os
 import requests
@@ -118,24 +119,24 @@ class MarketService:
 					f.write(f"SET @categoryID = {item['out_cat_id']};\n")
 
 			with open(query_file, "at", encoding='utf-8') as f:
-				f.write(f"CALL insert_product({item['id']}, {item['price']}, {sale_price}, '{self.clean(item['name'])}', "
+				f.write(f"CALL insert_product({item['price']}, {sale_price}, '{self.clean(item['name'])}', "
 						f"'{self.clean(item['brand_name'])}', '{self.clean(item['model'])}', '{self.clean(item['desc'])}');\n")
 
 				for spec in item['specs']:
 					for sp in spec['attrs']:
-						f.write(f"CALL insert_attribute({item['id']}, '{self.clean(spec['name'])}', '{self.clean(sp['label'])}', '{self.clean(sp['value'])}');\n")
+						f.write(f"CALL insert_attribute('{self.clean(item['brand_name'])}', '{self.clean(item['model'])}', '{self.clean(sp['label'])}', '{self.clean(sp['value'])}');\n")
 
 				try:
 					i = 0
 					for image in item['images']:
-						f.write(f"CALL insert_image({item['id']}, '{item['id']}_{i}.jpg');\n")
+						f.write(f"CALL insert_image({item['id']}, '{self.clean(item['brand_name'])}', '{self.clean(item['model'])}', '{item['id']}_{i}.jpg');\n")
 						i += 1
 				except:
 					pass
 
 				try:
 					for key, value in item['reviews'].items():
-						f.write(f"CALL insert_review({item['id']}, '{self.clean(key)}', '{self.clean(value['rating'])}', '{self.clean(value['date'])}', '{self.clean(value['positive_comment'])}', '{self.clean(value['negative_comment'])}', '{self.clean(value['comment'])}');\n")
+						f.write(f"CALL insert_review('{self.clean(item['brand_name'])}', '{self.clean(item['model'])}', '{self.clean(key)}', '{self.clean(value['rating'])}', '{self.clean(value['date'])}', '{self.clean(value['positive_comment'])}', '{self.clean(value['negative_comment'])}', '{self.clean(value['comment'])}');\n")
 				except:
 					pass
 
@@ -234,7 +235,7 @@ class MarketService:
 		while True:
 			while True:
 				city = mkt.set_location()
-				print(city)
+				# print(city)
 
 				content = mkt.get_category_by_id(category_id, page)
 				next_page = mkt.parse_next_page_category(content)
@@ -271,14 +272,9 @@ class MarketService:
 		i = 0
 		n = 0
 
-		#TODO: тут сделать прогресс-бар
-		# for i in tqdm(range(len(items)), total=len(items)):
-		# 	print(f"Прогресс: {i}/10", end="\r")
-		# 	time.sleep(1)
-
-		for i, item in tqdm(enumerate(items), total=len(items)):
+		for i, item in tqdm(enumerate(items), total=len(items), dynamic_ncols=True):
 			i += 1
-			print(f"Прогресс: {i}/{len(items)}", end="\r")
+			# print(f"Прогресс: {i}/{len(items)}", end="\r")
 			# print(f"Объявление № {i}")
 			no_price = True
 			if os.path.exists(f"./items/{item['id']}.json"):
@@ -291,7 +287,6 @@ class MarketService:
 						full_items.append(item)
 						n += 1
 						# print("Уже имеется!")
-			print(f"Прогресс: {i}/{len(items)}", end="\r")
 
 			if no_price:
 				item['out_cat_id'] = out_cat_id
@@ -305,7 +300,6 @@ class MarketService:
 				item['images'] = images
 
 				price = mkt.parse_product_price(content)
-				print(f"Прогресс: {i}/{len(items)}", end="\r")
 
 				if price:
 					item['price'] = price
@@ -314,19 +308,16 @@ class MarketService:
 				it = mkt.parse_specs(content)
 				item['specs'] = it['attributes'] if 'attributes' in it else ''
 				item['desc'] = it['desc'] if 'desc' in it else ''
-				print(f"Прогресс: {i}/{len(items)}", end="\r")
 
 				review_content = mkt.get_product_reviews_by_id(item['id'])
 				reviews = mkt.parse_reviews(review_content)
 				item['reviews'] = reviews
-				print(f"Прогресс: {i}/{len(items)}", end="\r")
 
 				model_content = mkt.get_model_name_dy_id(item['id'])
 				model_name = mkt.parse_model_name(model_content)
 				item['model'] = model_name
 
 				full_items.append(item)
-				print(f"Прогресс: {i}/{len(items)}", end="\r")
 				# print(f"=> id: {item['id']} / brand_name: {item['brand_name']} / price: {item['price']} / images: {item['images']}")
 
 				with open(f"./items/{item['id']}.json", "wt") as fp:
@@ -343,7 +334,7 @@ class MarketService:
 # ms = MarketService(proxies=[proxy])
 
 # proxy = '42000936db:f390601021@192.162.57.253:26828'
-proxy = 'c64d3da0f2:31af12e6d3@5.101.5.122:63684'
+# proxy = 'c64d3da0f2:31af12e6d3@5.101.5.122:63684'
 
 start_time = datetime.datetime.now()
 print(f"Начало работы: \n{start_time} \nСТАРТ!\n")

@@ -32,6 +32,8 @@ services:
       - SE_VNC_NO_PASSWORD=1
       - SE_NODE_OVERRIDE_MAX_SESSIONS=true
       - SE_NODE_MAX_SESSIONS=5
+      - HTTP_PROXY=http://d79149d748:4670814799@5.101.65.54:53097/
+      - HTTPS_PROXY=http://d79149d748:4670814799@5.101.65.54:53097/
 #  mongo:
 #    image: mongo:4.4.0
 #    restart: always

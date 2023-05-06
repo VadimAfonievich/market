@@ -345,9 +345,12 @@ class Market:
         price = dom.find("span[data-auto=\"mainPrice\"] span").eq(0).text().replace(" ", "").strip()
 
         #TODO: change price
-        if price == "":
-            price = re.search(r'<span data-auto="price-value">(.*?)</span>', text).group(1).replace(" ", "")
-        return price
+        try:
+            if price == "":
+                price = re.search(r'<span data-auto="price-value">(.*?)</span>', text).group(1).replace(" ", "")
+                return price
+        except Exception as ex:
+            return price
 
     def parse_product_images(self, text):
         dom = pq(text)

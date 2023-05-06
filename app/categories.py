@@ -21,6 +21,6 @@ categories = [
     # ['https://market.yandex.ru/catalog--detskii-transport/17346964/', 19, 5, 1],
     # ['https://market.yandex.ru/catalog--kholodilniki/71639/', 114, 10, 0],
     # ['https://market.yandex.ru/catalog--roboty-pylesosy/16806333/', 14, 5, 1],
-    ['https://market.yandex.ru/catalog--kholodilniki/71639/list?hid=15450081&allowCollapsing=1&local-offers-first=0&pricefrom=5000&priceto=100000', 5, 10, 1],
+    ['https://market.yandex.ru/catalog--kholodilniki/71639/list?hid=15450081&allowCollapsing=1&local-offers-first=0&pricefrom=5000&priceto=100000', 5, 20, 1],
     # ['https://market.yandex.ru/catalog--posudomoechnye-mashiny/54956/list?hid=90584&allowCollapsing=1&local-offers-first=0', 3, 10, 1]
     ]

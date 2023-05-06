@@ -301,8 +301,8 @@ class MarketService:
 				item['out_cat_id'] = out_cat_id
 
 				content = mkt.get_product_by_id(item['id'])
-				trubles = re.search(r"<title>На Маркете проблемы</title>", content)
-				if trubles:
+				troubles = re.search(r"<title>На Маркете проблемы</title>", content)
+				if troubles:
 					time.sleep(5)
 					content = mkt.get_product_by_id(item['id'])
 
@@ -310,10 +310,13 @@ class MarketService:
 				item['brand_name'] = brand
 
 				images = mkt.parse_product_images(content)
+				if not images:
+					continue
 				item['images'] = images
 
 				price = mkt.parse_product_price(content)
-
+				if price == "":
+					continue
 				if price:
 					item['price'] = price
 

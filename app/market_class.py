@@ -76,8 +76,9 @@ class Market:
         # self.driver = webdriver.Chrome(service=service_object, options=options, seleniumwire_options=wire_options)
         # self.driver = webdriver.Remote('http://chrome.localhost:4444/wd/hub', desired_capabilities=webdriver.DesiredCapabilities.CHROME, options=options)
         # self.driver = webdriver.Remote(command_executor='http://chrome.localhost:4444/wd/hub', desired_capabilities=webdriver.DesiredCapabilities.CHROME, options=options, seleniumwire_options=wire_options)
-        self.driver = webdriver.Remote(command_executor='http://45.67.230.21:4444/wd/hub',
-                                       desired_capabilities=capabilities, options=options, )
+        #TODO: раскомментировать строку 80, закомментировать 81
+        self.driver = webdriver.Remote(command_executor='http://45.67.230.21:4444/wd/hub', desired_capabilities=capabilities, options=options, )
+        # self.driver = webdriver.Remote(command_executor='http://chrome.localhost:4444/wd/hub', desired_capabilities=capabilities, options=options, )
         self.driver.maximize_window()
 
         # self.driver.get("https://api.ipify.org?format=json")
@@ -132,7 +133,7 @@ class Market:
         # self.driver.get("view-source:"+url)
         # pageSource = self.driver.find_element(By.TAG_NAME, 'body').text
         pageSource = self.driver.page_source
-        # time.sleep(10)
+        time.sleep(2)
         return pageSource
 
     # return self.driver.page_source
@@ -335,11 +336,17 @@ class Market:
     def parse_product_brand(self, text):
         dom = pq(text)
         brand = dom.find("div[data-zone-name=\"AllVendorProductsLink\"] a span").text()
+        if brand == "":
+            brand = "no_manufacturer_name"
         return brand
 
     def parse_product_price(self, text):
         dom = pq(text)
         price = dom.find("span[data-auto=\"mainPrice\"] span").eq(0).text().replace(" ", "").strip()
+
+        #TODO: change price
+        if price == "":
+            price = re.search(r'<span data-auto="price-value">(.*?)</span>', text).group(1).replace(" ", "")
         return price
 
     def parse_product_images(self, text):
@@ -351,14 +358,17 @@ class Market:
             for img in imgs:
                 images.append(pq(img).attr('src'))
             return images
-        else:
+        elif imgs == []:
             try:
-                img = re.search('class="_3Wp6V" src="(.+?)"', text).group(1)
+                img = re.search('class="_2gUfn" src="(.+?)"', text).group(1)
                 images.append(img)
                 return images
             except Exception as ex:
                 # print(f"Не найдены картинки. Ошибка {ex}")
                 return images
+        else:
+            images = []
+            return images
 
     def parse_reviews(self, text):
         try:

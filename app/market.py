@@ -2,6 +2,7 @@ from market_class import Market
 from tqdm import tqdm
 from categories import categories
 from categories import proxy
+from PIL import Image
 import json
 import os
 import requests
@@ -73,28 +74,36 @@ class MarketService:
 				discount = random.randint(1, 3)
 				sale_price = int(int(item['price']) * (100 - discount)/100)
 
-				i = 0
-				for image in item['images']:
-					r = requests.get(
-						"https:" + image.replace("https:", "").replace("http:", "").replace("1hq", "orig").replace("50x50",
-																												   "orig"))
+				#TODO: сжимать изображения до 450рх по наименьшей стороне
+				size = 450  # размер наименьшей стороны
+				for i, image in enumerate(item['images']):
+					r = requests.get("https:" + image.replace("https:", "").replace("http:", "").replace("1hq", "orig").replace("50x50", "orig"))
 					image_file1 = f"{product_image1_folder}/{item['id']}_{i}.jpg"
 					if not os.path.exists(image_file1):
 						with open(image_file1, "wb") as f:
 							f.write(r.content)
-					image_file2 = f"{product_image2_folder}/{uuid.uuid4()}.jpg"
+						img = Image.open(image_file1)
+						width, height = img.size
+						if width > size or height > size:
+							if width > height:
+								new_width = size
+								new_height = int(height * size / width)
+							else:
+								new_height = size
+								new_width = int(width * size / height)
+							img = img.resize((new_width, new_height))
+							img.save(image_file1)
+					image_file2 = f"{product_image2_folder}/{item['id']}_{i}.jpg"
 					if not os.path.exists(image_file2):
 						with open(image_file2, "wb") as f:
 							f.write(r.content)
-					i += 1
 
 			else:
 				sale_price = 0
 				i = 0
 				for image in item['images']:
 					r = requests.get(
-						"https:" + image.replace("https:", "").replace("http:", "").replace("1hq", "orig").replace("50x50",
-																												   "orig"))
+						"https:" + image.replace("https:", "").replace("http:", "").replace("1hq", "orig").replace("50x50", "orig"))
 					image_file1 = f"{product_image1_folder}/{item['id']}_{i}.jpg"
 					if not os.path.exists(image_file1):
 						with open(image_file1, "wb") as f:
@@ -124,7 +133,7 @@ class MarketService:
 
 				for spec in item['specs']:
 					for sp in spec['attrs']:
-						f.write(f"CALL insert_attribute('{self.clean(item['brand_name'])}', '{self.clean(item['model'])}', '{self.clean(sp['label'])}', '{self.clean(sp['value'])}');\n")
+						f.write(f"CALL insert_attribute('{self.clean(item['brand_name'])}', '{self.clean(item['model'])}', '{self.clean(spec['name'])}', '{self.clean(sp['label'])}', '{self.clean(sp['value'])}');\n")
 
 				try:
 					i = 0
@@ -234,7 +243,7 @@ class MarketService:
 		count = 0
 		while True:
 			while True:
-				city = mkt.set_location()
+				# city = mkt.set_location()
 				# print(city)
 
 				content = mkt.get_category_by_id(category_id, page)
@@ -292,6 +301,10 @@ class MarketService:
 				item['out_cat_id'] = out_cat_id
 
 				content = mkt.get_product_by_id(item['id'])
+				trubles = re.search(r"<title>На Маркете проблемы</title>", content)
+				if trubles:
+					time.sleep(5)
+					content = mkt.get_product_by_id(item['id'])
 
 				brand = mkt.parse_product_brand(content)
 				item['brand_name'] = brand

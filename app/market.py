@@ -44,7 +44,7 @@ class MarketService:
 		return value.replace("'", "`").replace("\\", "").replace("\n", "\\r\\n")
 
 	# @timed
-	def save_result(self, item, folder, sale_price):
+	def save_result(self, item, folder, sale_price, max_items):
 		try:
 			# item = result[0]
 			# folder = result[1]
@@ -110,59 +110,68 @@ class MarketService:
 							f.write(r.content)
 					i += 1
 
-			folder_images_path = f"items/{folder}/images"
-			zip_file_name = 'img.zip'
-			output_directory = f"items/{folder}"
+			# folder_images_path = f"items/{folder}/images"
+			# zip_file_name = 'img.zip'
+			# output_directory = f"items/{folder}"
 
-			with zipfile.ZipFile(os.path.join(output_directory, zip_file_name), "w", zipfile.ZIP_DEFLATED) as zip_file:
-				root_path = os.path.dirname(folder_images_path)
-				for root, dirs, files in os.walk(folder_images_path):
-					for file in files:
-						file_path = os.path.join(root, file)
-						relative_path = os.path.relpath(file_path, root_path)
-						zip_file.write(file_path, arcname=relative_path)
+			# with zipfile.ZipFile(os.path.join(output_directory, zip_file_name), "w", zipfile.ZIP_DEFLATED) as zip_file:
+			# 	root_path = os.path.dirname(folder_images_path)
+			# 	for root, dirs, files in os.walk(folder_images_path):
+			# 		for file in files:
+			# 			file_path = os.path.join(root, file)
+			# 			relative_path = os.path.relpath(file_path, root_path)
+			# 			zip_file.write(file_path, arcname=relative_path)
 
 			query_file = f"items/{folder}/queries/{item['out_cat_id']}.sql"
 			if not os.path.exists(query_file):
 				with open(query_file, "wt", encoding='utf-8') as f:
 					f.write(f"SET @categoryID = {item['out_cat_id']};\n")
 
-			with open(query_file, "at", encoding='utf-8') as f:
-				f.write(f"CALL insert_product({item['price']}, {sale_price}, '{self.clean(item['name'])}', "
-						f"'{self.clean(item['brand_name'])}', '{self.clean(item['model'])}', '{self.clean(item['desc'])}');\n")
+			#TODO: сделать проверку на наличие товара
+			with open(query_file, 'r') as f:
+				contents = f.read()
+				have_item = (f"'{self.clean(item['name'])}', '{self.clean(item['brand_name'])}', '{self.clean(item['model'])}', '{self.clean(item['desc'])}');\n")
 
-				for spec in item['specs']:
-					for sp in spec['attrs']:
-						f.write(f"CALL insert_attribute('{self.clean(item['brand_name'])}', '{self.clean(item['model'])}', '{self.clean(spec['name'])}', '{self.clean(sp['label'])}', '{self.clean(sp['value'])}');\n")
+				if have_item in contents:
+					item_no_need = 'Товар уже есть в sql!'
+					# print('Товар уже есть в sql!')
+				else:
+					with open(query_file, "at", encoding='utf-8') as f:
+						f.write(f"CALL insert_product({item['price']}, {sale_price}, '{self.clean(item['name'])}', "
+								f"'{self.clean(item['brand_name'])}', '{self.clean(item['model'])}', '{self.clean(item['desc'])}');\n")
 
-				try:
-					i = 0
-					for image in item['images']:
-						f.write(f"CALL insert_image({item['id']}, '{self.clean(item['brand_name'])}', '{self.clean(item['model'])}', '{item['id']}_{i}.jpg');\n")
-						i += 1
-				except:
-					pass
+						for spec in item['specs']:
+							for sp in spec['attrs']:
+								f.write(f"CALL insert_attribute('{self.clean(item['brand_name'])}', '{self.clean(item['model'])}', '{self.clean(spec['name'])}', '{self.clean(sp['label'])}', '{self.clean(sp['value'])}');\n")
 
-				try:
-					for key, value in item['reviews'].items():
-						f.write(f"CALL insert_review('{self.clean(item['brand_name'])}', '{self.clean(item['model'])}', '{self.clean(key)}', '{self.clean(value['rating'])}', '{self.clean(value['date'])}', '{self.clean(value['positive_comment'])}', '{self.clean(value['negative_comment'])}', '{self.clean(value['comment'])}');\n")
-				except:
-					pass
+						try:
+							i = 0
+							for image in item['images']:
+								f.write(f"CALL insert_image({item['id']}, '{self.clean(item['brand_name'])}', '{self.clean(item['model'])}', '{item['id']}_{i}.jpg');\n")
+								i += 1
+						except:
+							pass
 
-			folder_sql_path = f"items/{folder}/queries"
-			zip_file_name = "sql.zip"
-			output_directory = f"items/{folder}"
+						try:
+							for key, value in item['reviews'].items():
+								f.write(f"CALL insert_review('{self.clean(item['brand_name'])}', '{self.clean(item['model'])}', '{self.clean(key)}', '{self.clean(value['rating'])}', '{self.clean(value['date'])}', '{self.clean(value['positive_comment'])}', '{self.clean(value['negative_comment'])}', '{self.clean(value['comment'])}');\n")
+						except:
+							pass
 
-			with zipfile.ZipFile(os.path.join(output_directory, zip_file_name), "w", zipfile.ZIP_DEFLATED) as zip_file:
-				root_path = os.path.dirname(folder_sql_path)
-				for root, dirs, files in os.walk(folder_sql_path):
-					for file in files:
-						file_path = os.path.join(root, file)
-						relative_path = os.path.relpath(file_path, root_path)
-						zip_file.write(file_path, arcname=relative_path)
+				# folder_sql_path = f"items/{folder}/queries"
+				# zip_file_name = "sql.zip"
+				# output_directory = f"items/{folder}"
 
-			done = True
-			return done
+				# with zipfile.ZipFile(os.path.join(output_directory, zip_file_name), "w", zipfile.ZIP_DEFLATED) as zip_file:
+				# 	root_path = os.path.dirname(folder_sql_path)
+				# 	for root, dirs, files in os.walk(folder_sql_path):
+				# 		for file in files:
+				# 			file_path = os.path.join(root, file)
+				# 			relative_path = os.path.relpath(file_path, root_path)
+				# 			zip_file.write(file_path, arcname=relative_path)
+
+				done = True
+				return done, query_file
 		except:
 			pass
 
@@ -202,12 +211,31 @@ class MarketService:
 			print(f"\nВсего объявлений к парсингу (max_items): {max_items} \n")
 			# Уникализируем по id элемента
 			short_items = list({v['id']: v for v in short_items}.values())
-			full_items = self.parse_items(short_items, out_cat_id, sale_price)
+			full_items = self.parse_items(short_items, max_items, out_cat_id, sale_price, count_full_items=0)
 
 			print("Сохранение json, sql, images...")
 
 			for item in full_items:
-				self.save_result(item, out_cat_id, sale_price)
+				self.save_result(item, out_cat_id, sale_price, max_items)
+
+			#TODO: добавить проверку кол-ва результатов парса. Если кол-во меньше чем max_items продолжить парс - process()
+			query_file = f"items/{out_cat_id}/queries/{out_cat_id}.sql"
+			with open(query_file, 'r') as file:
+				count = 0
+				for line in file:
+					if 'CALL insert_product' in line:
+						count += 1
+			print(f"\nВсего в json сохранено товаров - {count} ")
+			print(f"Продолжаю добивать до max-items")
+
+			if count < max_items:
+				count_full_items = count
+				full_items = self.parse_items(short_items, max_items, out_cat_id, sale_price, count_full_items)
+
+				for item in full_items:
+					self.save_result(item, out_cat_id, sale_price, max_items)
+
+				# ms.process(categories)
 
 			# pool = multiprocessing.Pool(processes=5)
 			#
@@ -270,16 +298,18 @@ class MarketService:
 				break
 			if count >= max_items:
 				break
+		#TODO: протестировать и не обрезать до max_items
 		# обрезаем до max_items
-		short_items = short_items[:max_items]
+		# short_items = short_items[:max_items]
 		return short_items
 
 	# @timed
-	def parse_items(self, items, out_cat_id, sale_price):
+	def parse_items(self, items, max_items, out_cat_id, sale_price, count_full_items):
 		# mkt = Market(proxy=self.get_proxy())
 		full_items = []
 		i = 0
 		n = 0
+		# count_full_items = 0
 
 		for i, item in tqdm(enumerate(items), total=len(items), dynamic_ncols=True):
 			i += 1
@@ -296,6 +326,8 @@ class MarketService:
 						full_items.append(item)
 						n += 1
 						# print("Уже имеется!")
+						continue
+
 
 			if no_price:
 				item['out_cat_id'] = out_cat_id
@@ -303,7 +335,7 @@ class MarketService:
 				content = mkt.get_product_by_id(item['id'])
 				troubles = re.search(r"<title>На Маркете проблемы</title>", content)
 				if troubles:
-					time.sleep(5)
+					time.sleep(2)
 					content = mkt.get_product_by_id(item['id'])
 
 				brand = mkt.parse_product_brand(content)
@@ -315,7 +347,7 @@ class MarketService:
 				item['images'] = images
 
 				price = mkt.parse_product_price(content)
-				if price == "":
+				if price is None:
 					continue
 				if price:
 					item['price'] = price
@@ -338,6 +370,11 @@ class MarketService:
 
 				with open(f"./items/{item['id']}.json", "wt") as fp:
 					json.dump(item, fp)
+
+				count_full_items += 1
+
+				if count_full_items == max_items:
+					break
 
 		print(f"\n===========================================================================\n"
 			  f"Пройдено объявлений: {i}\n"

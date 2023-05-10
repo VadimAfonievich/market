@@ -77,8 +77,8 @@ class Market:
         # self.driver = webdriver.Remote('http://chrome.localhost:4444/wd/hub', desired_capabilities=webdriver.DesiredCapabilities.CHROME, options=options)
         # self.driver = webdriver.Remote(command_executor='http://chrome.localhost:4444/wd/hub', desired_capabilities=webdriver.DesiredCapabilities.CHROME, options=options, seleniumwire_options=wire_options)
         #TODO: раскомментировать строку 80, закомментировать 81
-        self.driver = webdriver.Remote(command_executor='http://45.67.230.21:4444/wd/hub', desired_capabilities=capabilities, options=options, )
-        # self.driver = webdriver.Remote(command_executor='http://chrome.localhost:4444/wd/hub', desired_capabilities=capabilities, options=options, )
+        # self.driver = webdriver.Remote(command_executor='http://45.67.230.21:4444/wd/hub', desired_capabilities=capabilities, options=options, )
+        self.driver = webdriver.Remote(command_executor='http://chrome.localhost:4444/wd/hub', desired_capabilities=capabilities, options=options, )
         self.driver.maximize_window()
 
         # self.driver.get("https://api.ipify.org?format=json")
@@ -133,7 +133,7 @@ class Market:
         # self.driver.get("view-source:"+url)
         # pageSource = self.driver.find_element(By.TAG_NAME, 'body').text
         pageSource = self.driver.page_source
-        time.sleep(2)
+        # time.sleep(2)
         return pageSource
 
     # return self.driver.page_source
@@ -343,6 +343,8 @@ class Market:
     def parse_product_price(self, text):
         dom = pq(text)
         price = dom.find("span[data-auto=\"mainPrice\"] span").eq(0).text().replace(" ", "").strip()
+        if price:
+            return price
 
         #TODO: change price
         try:
@@ -351,6 +353,7 @@ class Market:
                 return price
         except Exception as ex:
             return price
+        return price
 
     def parse_product_images(self, text):
         dom = pq(text)
